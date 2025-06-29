@@ -3,7 +3,17 @@
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Typography, List, ListItem, ListItemAvatar, Avatar, ListItemText, CircularProgress, Paper } from '@mui/material';
+import {
+  Box,
+  Typography,
+  List,
+  ListItem,
+  ListItemAvatar,
+  Avatar,
+  ListItemText,
+  CircularProgress,
+  Paper,
+} from '@mui/material';
 import Link from 'next/link';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || '';
@@ -26,55 +36,59 @@ export default function SearchResultsPage() {
       setUsers([]);
       return;
     }
+
     setLoading(true);
-    axios.get(`${API_URL}/api/users/search?query=${encodeURIComponent(query)}`)
-      .then(res => setUsers(res.data))
+    axios
+      .get<User[]>(`${API_URL}/api/users/search?query=${encodeURIComponent(query)}`)
+      .then((res) => setUsers(res.data))
       .finally(() => setLoading(false));
   }, [query]);
 
   return (
-    <Box sx={{ p: 4, maxWidth: '600px', margin: 'auto' }}>
-      <Typography variant="h4" gutterBottom>
-        Search Results for "{query}"
+    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4, p: 2 }}>
+      <Typography variant="h5" mb={3}>
+        Search Results for &quot;{query}&quot;
       </Typography>
-      <Paper>
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
+
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <Paper>
           <List>
-            {users.map(user => (
+            {users.map((user) => (
+              // @ts-expect-error: WEird
               <ListItem
                 key={user._id}
                 component={Link}
                 href={`/users/${user._id}`}
-                sx={{ cursor: 'pointer' }}
+                button
               >
                 <ListItemAvatar>
-                  <Avatar src={user.avatar && user.avatar !== 'default-avatar-url'
-                    ? user.avatar.startsWith('http')
-                      ? user.avatar
-                      : `${API_URL}${user.avatar}`
-                    : undefined
-                  }>
+                  <Avatar>
                     {!user.avatar || user.avatar === 'default-avatar-url'
                       ? user.username.charAt(0).toUpperCase()
-                      : null}
+                      : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={user.avatar}
+                          alt={user.username}
+                          style={{ width: '100%', height: '100%' }}
+                        />
+                      )
+                    }
                   </Avatar>
                 </ListItemAvatar>
-                <ListItemText
-                  primary={user.username}
-                  secondary={user.favoriteTeam ? `Favorite Team: ${user.favoriteTeam}` : undefined}
-                />
+                <ListItemText primary={user.username} />
               </ListItem>
             ))}
-            {users.length === 0 && query.length > 0 && !loading && (
-              <Typography sx={{ p: 2 }} color="text.secondary">No users found.</Typography>
-            )}
           </List>
-        )}
-      </Paper>
+          {users.length === 0 && query.length > 0 && !loading && (
+            <Typography align="center" sx={{ p: 2 }}>
+              No users found.
+            </Typography>
+          )}
+        </Paper>
+      )}
     </Box>
   );
 }

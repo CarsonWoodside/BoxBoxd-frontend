@@ -1,12 +1,24 @@
 'use client';
 
 import { useState, useEffect, use, useCallback } from 'react';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import { useNotification } from '@/context/NotificationContext';
 import ReviewForm from '@/components/ReviewForm';
 import ReviewList from '@/components/ReviewList';
-import { Box, Typography, Paper, CircularProgress, Alert, Chip, Divider, Tooltip, Card, CardContent, Stack } from '@mui/material';
+import {
+  Box,
+  Typography,
+  Paper,
+  CircularProgress,
+  Alert,
+  Chip,
+  Divider,
+  Tooltip,
+  Card,
+  CardContent,
+  Stack,
+} from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import FlagIcon from '@mui/icons-material/Flag';
@@ -15,48 +27,54 @@ import SportsMotorsportsIcon from '@mui/icons-material/SportsMotorsports';
 
 // Country name to ISO code mapping (expand as needed)
 const countryNameToCode: Record<string, string> = {
-  Belgium: "BE",
-  Italy: "IT",
-  "United Kingdom": "GB",
-  France: "FR",
-  Germany: "DE",
-  Spain: "ES",
-  Monaco: "MC",
-  Australia: "AU",
-  Canada: "CA",
-  Austria: "AT",
-  Hungary: "HU",
-  Netherlands: "NL",
-  Singapore: "SG",
-  Japan: "JP",
-  USA: "US",
-  "United States": "US",
-  Mexico: "MX",
-  Brazil: "BR",
-  Qatar: "QA",
-  "Saudi Arabia": "SA",
-  Bahrain: "BH",
-  Azerbaijan: "AZ",
-  China: "CN",
-  Russia: "RU",
-  Turkey: "TR",
-  Portugal: "PT",
-  "United Arab Emirates": "AE",
-  UAE: "AE", // Abu Dhabi GP
-  "South Africa": "ZA",
-  "Argentina": "AR",
+  Belgium: 'BE',
+  Italy: 'IT',
+  'United Kingdom': 'GB',
+  France: 'FR',
+  Germany: 'DE',
+  Spain: 'ES',
+  Monaco: 'MC',
+  Australia: 'AU',
+  Canada: 'CA',
+  Austria: 'AT',
+  Hungary: 'HU',
+  Netherlands: 'NL',
+  Singapore: 'SG',
+  Japan: 'JP',
+  USA: 'US',
+  'United States': 'US',
+  Mexico: 'MX',
+  Brazil: 'BR',
+  Qatar: 'QA',
+  'Saudi Arabia': 'SA',
+  Bahrain: 'BH',
+  Azerbaijan: 'AZ',
+  China: 'CN',
+  Russia: 'RU',
+  Turkey: 'TR',
+  Portugal: 'PT',
+  'United Arab Emirates': 'AE',
+  UAE: 'AE', // Abu Dhabi GP
+  'South Africa': 'ZA',
+  Argentina: 'AR',
   // ...add more as needed
 };
 
 function getCountryCode(country: string | undefined): string | undefined {
   if (!country) return undefined;
-  // Defensive: trim and match as-is
   const trimmed = country.trim();
   return countryNameToCode[trimmed] || undefined;
 }
 
-interface User { id: string; username: string; }
-interface ReviewUser { _id: string; username: string; avatar?: string; }
+interface User {
+  id: string;
+  username: string;
+}
+interface ReviewUser {
+  _id: string;
+  username: string;
+  avatar?: string;
+}
 interface Race {
   _id: string;
   season: number;
@@ -68,8 +86,18 @@ interface Race {
   winningConstructor?: string;
   country?: string;
 }
-interface Review { _id: string; rating: number; text: string; watchedOn: string; tags: string[]; isRewatch: boolean; user: ReviewUser; }
-interface RaceDetailPageProps { params: Promise<{ id: string; }>; }
+interface Review {
+  _id: string;
+  rating: number;
+  text: string;
+  watchedOn: string;
+  tags: string[];
+  isRewatch: boolean;
+  user: ReviewUser;
+}
+interface RaceDetailPageProps {
+  params: Promise<{ id: string }>;
+}
 
 export default function RaceDetailPage({ params }: RaceDetailPageProps) {
   const { id } = use(params);
@@ -88,13 +116,17 @@ export default function RaceDetailPage({ params }: RaceDetailPageProps) {
       const raceApiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/races/${id}`;
       const reviewsApiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/reviews/race/${id}`;
       const [raceResponse, reviewsResponse] = await Promise.all([
-        axios.get(raceApiUrl),
-        axios.get(reviewsApiUrl),
+        axios.get<Race>(raceApiUrl),
+        axios.get<Review[]>(reviewsApiUrl),
       ]);
       setRace(raceResponse.data);
       setReviews(reviewsResponse.data);
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch page data.');
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ message?: string }>;
+      setError(
+        axiosErr.response?.data?.message || 'Failed to fetch page data.'
+      );
+      // eslint-disable-next-line no-console
       console.error('Error fetching page data:', err);
     }
   }, [id]);
@@ -116,9 +148,9 @@ export default function RaceDetailPage({ params }: RaceDetailPageProps) {
       showNotification('Review deleted successfully!', 'success');
       refreshData();
     } catch (err) {
-      const errorMessage = 'Error: Could not delete review.';
+      // eslint-disable-next-line no-console
       console.error('Failed to delete review', err);
-      showNotification(errorMessage, 'error');
+      showNotification('Error: Could not delete review.', 'error');
     }
   };
 
@@ -127,8 +159,18 @@ export default function RaceDetailPage({ params }: RaceDetailPageProps) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  if (isLoading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>;
-  if (error) return <Box sx={{ p: 4 }}><Alert severity="error">{error}</Alert></Box>;
+  if (isLoading)
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  if (error)
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
   if (!race) return null;
 
   // Get flag URL
@@ -149,7 +191,6 @@ export default function RaceDetailPage({ params }: RaceDetailPageProps) {
           borderRadius: 3,
           position: 'relative',
           overflow: 'hidden',
-          // Strong dark overlay for readability
           background: flagUrl
             ? `linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url(${flagUrl}) center/cover no-repeat`
             : 'linear-gradient(90deg, #e53935 0%, #e35d5b 100%)',
@@ -157,33 +198,58 @@ export default function RaceDetailPage({ params }: RaceDetailPageProps) {
         }}
       >
         <Box sx={{ position: 'relative', zIndex: 1 }}>
-          <Typography variant="h3" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
+          <Typography
+            variant="h3"
+            component="h1"
+            gutterBottom
+            sx={{ fontWeight: 700 }}
+          >
             {race.raceName}
           </Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: 'center', mb: 2 }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={2}
+            sx={{ alignItems: 'center', mb: 2 }}
+          >
             <Chip
               color="default"
               icon={<CalendarMonthIcon sx={{ color: 'white !important' }} />}
               label={`Season: ${race.season}`}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 500 }}
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                fontWeight: 500,
+              }}
             />
             <Chip
               color="default"
               icon={<FlagIcon sx={{ color: 'white !important' }} />}
               label={`Round: ${race.round}`}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 500 }}
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                fontWeight: 500,
+              }}
             />
             <Chip
               color="default"
               icon={<PlaceIcon sx={{ color: 'white !important' }} />}
               label={race.circuit}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 500 }}
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                fontWeight: 500,
+              }}
             />
             <Chip
               color="default"
               icon={<SportsMotorsportsIcon sx={{ color: 'white !important' }} />}
               label={new Date(race.date).toLocaleDateString()}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white', fontWeight: 500 }}
+              sx={{
+                bgcolor: 'rgba(255,255,255,0.15)',
+                color: 'white',
+                fontWeight: 500,
+              }}
             />
           </Stack>
           {/* Winner Reveal */}
@@ -194,8 +260,12 @@ export default function RaceDetailPage({ params }: RaceDetailPageProps) {
                 icon={<EmojiEventsIcon sx={{ color: 'white !important' }} />}
                 label={
                   race.winningDriverName
-                    ? `${race.winningDriverName}${race.winningConstructor ? ` (${race.winningConstructor})` : ''}`
-                    : `This race hasn't taken place yet!`
+                    ? `${race.winningDriverName}${
+                        race.winningConstructor
+                          ? ` (${race.winningConstructor})`
+                          : ''
+                      }`
+                    : `This race hasn\u2019t taken place yet!`
                 }
                 sx={{
                   bgcolor: 'rgba(255,255,255,0.25)',
@@ -236,7 +306,9 @@ export default function RaceDetailPage({ params }: RaceDetailPageProps) {
       )}
 
       <Box sx={{ mt: 4 }}>
-        <Typography variant="h4" sx={{ mb: 2 }}>Community Reviews</Typography>
+        <Typography variant="h4" sx={{ mb: 2 }}>
+          Community Reviews
+        </Typography>
         <Divider sx={{ mb: 2 }} />
         <ReviewList
           reviews={reviews}

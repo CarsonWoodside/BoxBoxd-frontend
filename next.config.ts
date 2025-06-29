@@ -10,7 +10,6 @@ const nextConfig = {
     // and the error is a known typing issue with the library.
     // !! WARN !!
     ignoreBuildErrors: true,
-    devIndicators: false,
   },
 };
 

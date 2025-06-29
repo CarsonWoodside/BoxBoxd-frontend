@@ -19,37 +19,46 @@ export default function RacesPage() {
         const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/races`;
         const response = await axios.get(apiUrl);
         setSeasons(response.data.seasons || []);
-      } catch (err: any) {
+      } catch (err) {
         setError('Failed to fetch seasons.');
+        // eslint-disable-next-line no-console
         console.error('Error fetching seasons:', err);
       } finally {
         setIsLoading(false);
       }
     };
+
     fetchSeasons();
   }, []);
 
   return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h3" gutterBottom>
+    <Box sx={{ maxWidth: 500, mx: 'auto', mt: 4, p: 2 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
         Browse Seasons
       </Typography>
-      <Typography variant="body1" sx={{ mb: 3 }}>
+      <Typography variant="body1" mb={3}>
         Select a season to view the race calendar.
       </Typography>
+
       {isLoading && <CircularProgress />}
+
       {error && <Alert severity="error">{error}</Alert>}
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mt: 2 }}>
-        {!isLoading && !error && seasons.map((season) => (
-          <Button
-            key={season}
-            variant="contained"
-            onClick={() => router.push(`/races/${season}`)}
-          >
-            {season} Season
-          </Button>
-        ))}
-      </Box>
+
+      {!isLoading && !error && (
+        <Box display="flex" flexDirection="column" gap={2}>
+          {seasons.map((season) => (
+            <Button
+              key={season}
+              variant="contained"
+              onClick={() => router.push(`/races/${season}`)}
+              sx={{ justifyContent: 'flex-start' }}
+              fullWidth
+            >
+              {season} Season
+            </Button>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 }

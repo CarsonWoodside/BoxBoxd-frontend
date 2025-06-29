@@ -80,6 +80,7 @@ interface RaceInfo {
   circuit: string;
   country?: string;
 }
+
 interface UserReview {
   _id: string;
   rating: number;
@@ -87,16 +88,18 @@ interface UserReview {
   race: RaceInfo;
   user: { username?: string; avatar?: string };
 }
+
 interface PublicUser {
   username?: string;
   avatar?: string;
   favoriteTeam?: string;
 }
+
 interface Params {
   id: string;
 }
 
-export default function UserProfilePage({ params }: { params: Promise<Params> }) {
+export default function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const { user: currentUser } = useAuth();
   const [profileUser, setProfileUser] = useState<PublicUser | null>(null);
@@ -109,9 +112,9 @@ export default function UserProfilePage({ params }: { params: Promise<Params> })
       setIsLoading(true);
       setError(null);
       try {
-        const userRes = await axios.get(`${API_URL}/api/users/${id}`);
+        const userRes = await axios.get<PublicUser>(`${API_URL}/api/users/${id}`);
         setProfileUser(userRes.data);
-        const reviewsRes = await axios.get(`${API_URL}/api/reviews/user/${id}`);
+        const reviewsRes = await axios.get<UserReview[]>(`${API_URL}/api/reviews/user/${id}`);
         setReviews(reviewsRes.data);
       } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
@@ -128,100 +131,85 @@ export default function UserProfilePage({ params }: { params: Promise<Params> })
 
   function renderAvatar(user: PublicUser = {}, size = 64) {
     const showAvatar = user.avatar && user.avatar !== 'default-avatar-url';
-    const avatarSrc = showAvatar
-      ? user.avatar?.startsWith('http')
-        ? user.avatar
-        : `${API_URL}${user.avatar ?? ''}`
-      : undefined;
+    const avatarSrc =
+      showAvatar && user.avatar
+        ? user.avatar.startsWith('http')
+          ? user.avatar
+          : `${API_URL}${user.avatar ?? ''}`
+        : undefined;
     return (
       <Avatar
-        alt={user.username ?? 'User'}
         src={avatarSrc}
-        sx={{ width: size, height: size, fontSize: size / 2, mr: 2, bgcolor: !showAvatar ? 'primary.main' : undefined }}
+        sx={{ width: size, height: size, fontSize: size / 2, mb: 2 }}
       >
         {!showAvatar && (user.username?.charAt(0).toUpperCase() ?? '?')}
       </Avatar>
     );
   }
 
-  if (isLoading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>;
-  if (error) return <Box sx={{ p: 4 }}><Alert severity="error">{error}</Alert></Box>;
+  if (isLoading)
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  if (error)
+    return (
+      <Box sx={{ p: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
   if (!profileUser) return null;
 
   return (
-    <ProtectedRoute>
-      <Box sx={{ p: 4, maxWidth: '700px', margin: 'auto' }}>
-        <Paper elevation={2} sx={{ p: 3, mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-          {renderAvatar(profileUser)}
-          <Box>
-            <Typography variant="h3" gutterBottom>{profileUser.username}</Typography>
-            <Typography variant="body1" sx={{ mb: 1 }}>Favorite Team: {profileUser.favoriteTeam || 'None'}</Typography>
-            {currentUser && currentUser.id !== id && (
-              <Box>
-                {/* Follow/unfollow button will be added later */}
+    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 2 }}>
+      {renderAvatar(profileUser)}
+      <Typography variant="h5" mb={1}>
+        {profileUser.username}
+      </Typography>
+      <Typography variant="body2" mb={2}>
+        Favorite Team: {profileUser.favoriteTeam || 'None'}
+      </Typography>
+      {currentUser && currentUser.id !== id && (
+        <Box mb={2}>{/* Follow/unfollow button will be added later */}</Box>
+      )}
+      <Typography variant="subtitle1" mb={1}>
+        Watched Races ({reviews.length})
+      </Typography>
+      {reviews.length === 0 ? (
+        <EmptyState message="No reviews yet." title={''} />
+      ) : (
+        reviews.map((review) => {
+          const flagCode = getFlagCode(review.race.raceName);
+          return (
+            <Card sx={{ p: 2, mb: 2 }} key={review._id}>
+              <Box display="flex" alignItems="center" mb={1}>
+                <Typography variant="subtitle1" fontWeight="bold" mr={1}>
+                  {review.race.raceName}
+                </Typography>
+                {review.race.raceName && flagCode && (
+                  <img
+                    src={`https://flagcdn.com/w40/${flagCode}.png`}
+                    alt={`${review.race.raceName} flag`}
+                    width={32}
+                    height={20}
+                    style={{ marginLeft: 8 }}
+                  />
+                )}
               </Box>
-            )}
-          </Box>
-        </Paper>
-
-        <Typography variant="h4" gutterBottom>
-          Watched Races ({reviews.length})
-        </Typography>
-
-        {reviews.length === 0 ? (
-          <EmptyState
-            title="No Reviews"
-            message="This user hasn't logged any races yet."
-          />
-        ) : (
-          <Box>
-            {reviews.map((review) => {
-              const flagCode = getFlagCode(review.race.raceName);
-              return (
-                <Card
-                  key={review._id}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    mb: 2,
-                    px: 2,
-                    py: 2,
-                    boxShadow: 2,
-                    borderRadius: 3,
-                    transition: 'box-shadow 0.2s',
-                    '&:hover': { boxShadow: 6 },
-                    bgcolor: 'background.default'
-                  }}
-                >
-                  <Box sx={{ flexGrow: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="h6" component="div">
-                        {review.race.raceName}
-                      </Typography>
-                      {review.race.raceName && flagCode && (
-                        <img
-                          src={`https://flagcdn.com/w20/${flagCode}.png`}
-                          alt={review.race.raceName + " flag"}
-                          style={{ borderRadius: 2, boxShadow: '0 1px 2px #0001' }}
-                          width={20}
-                          height={14}
-                        />
-                      )}
-                    </Box>
-                    <Typography sx={{ mb: 1.5 }} color="text.secondary">
-                      {review.race.season} Season
-                    </Typography>
-                    <Rating name="read-only" value={review.rating} precision={0.5} readOnly size="small" />
-                    <Typography variant="body2" sx={{ mt: 1 }}>
-                      Watched on: {new Date(review.watchedOn).toLocaleDateString()}
-                    </Typography>
-                  </Box>
-                </Card>
-              );
-            })}
-          </Box>
-        )}
-      </Box>
-    </ProtectedRoute>
+              <Typography variant="body2" color="text.secondary">
+                {review.race.season} Season
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Watched on: {new Date(review.watchedOn).toLocaleDateString()}
+              </Typography>
+              <Box mt={1}>
+                <Rating value={review.rating} readOnly size="small" />
+              </Box>
+            </Card>
+          );
+        })
+      )}
+    </Box>
   );
 }

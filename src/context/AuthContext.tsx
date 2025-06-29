@@ -11,7 +11,7 @@ interface User {
   username: string;
   email: string;
   favoriteTeam: string;
-  avatar: string; // Added avatar field
+  avatar: string;
 }
 
 interface AuthContextType {
@@ -19,8 +19,8 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   theme: Theme;
-  login: (payload: any) => Promise<void>;
-  register: (payload: any) => Promise<void>; // Added register function
+  login: (payload: Record<string, unknown>) => Promise<void>;
+  register: (payload: FormData | Record<string, unknown>) => Promise<void>;
   logout: () => void;
   updateFavoriteTeam: (team: string) => Promise<void>;
 }
@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
     if (storedToken && storedUser) {
-      const parsedUser = JSON.parse(storedUser);
+      const parsedUser: User = JSON.parse(storedUser);
       setToken(storedToken);
       setUser(parsedUser);
       setTheme(themes[parsedUser.favoriteTeam] || themes.default);
@@ -46,33 +46,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(false);
   }, []);
 
-  const login = async (payload: any) => {
+  const login = async (payload: Record<string, unknown>) => {
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/users/login`;
     const response = await axios.post(apiUrl, payload);
-    const { token, user } = response.data;
-    setUser(user);
-    setToken(token);
-    setTheme(themes[user.favoriteTeam] || themes.default);
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
+    const { token: resToken, user: resUser } = response.data;
+    setUser(resUser);
+    setToken(resToken);
+    setTheme(themes[resUser.favoriteTeam] || themes.default);
+    localStorage.setItem('token', resToken);
+    localStorage.setItem('user', JSON.stringify(resUser));
     router.push('/');
   };
 
-  // New: Register with avatar support (FormData)
-  const register = async (payload: any) => {
+  // Register with avatar support (FormData)
+  const register = async (payload: FormData | Record<string, unknown>) => {
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/users/register`;
-    // If payload is FormData, set headers automatically
     const response = await axios.post(apiUrl, payload, {
       headers: payload instanceof FormData
         ? { 'Content-Type': 'multipart/form-data' }
         : undefined,
     });
-    const { token, user } = response.data;
-    setUser(user);
-    setToken(token);
-    setTheme(themes[user.favoriteTeam] || themes.default);
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
+    const { token: resToken, user: resUser } = response.data;
+    setUser(resUser);
+    setToken(resToken);
+    setTheme(themes[resUser.favoriteTeam] || themes.default);
+    localStorage.setItem('token', resToken);
+    localStorage.setItem('user', JSON.stringify(resUser));
     router.push('/');
   };
 
@@ -88,18 +87,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!token) return;
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/users/profile`;
-      const response = await axios.put(apiUrl, { favoriteTeam: team }, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.put(
+        apiUrl,
+        { favoriteTeam: team },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       const updatedUser = response.data;
       setUser(updatedUser);
       setTheme(themes[updatedUser.favoriteTeam] || themes.default);
       localStorage.setItem('user', JSON.stringify(updatedUser));
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to update favorite team', error);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, theme, login, register, logout, updateFavoriteTeam }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isLoading,
+        theme,
+        login,
+        register,
+        logout,
+        updateFavoriteTeam,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
