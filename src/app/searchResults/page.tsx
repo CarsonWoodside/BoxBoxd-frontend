@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -25,7 +26,7 @@ interface User {
   favoriteTeam?: string;
 }
 
-export default function SearchResultsPage() {
+function InnerSearchResultsPage() {
   const searchParams = useSearchParams();
   const query = searchParams.get('query') || '';
   const [users, setUsers] = useState<User[]>([]);
@@ -90,5 +91,13 @@ export default function SearchResultsPage() {
         </Paper>
       )}
     </Box>
+  );
+}
+
+export default function SearchResultsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InnerSearchResultsPage />
+    </Suspense>
   );
 }
