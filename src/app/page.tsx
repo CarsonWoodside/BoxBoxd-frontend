@@ -138,7 +138,7 @@ export default function HomePage() {
           ? hasFollowing
             ? `Welcome back, ${user.username}. Here&rsquo;s what your friends have been saying.`
             : `Welcome back, ${user.username}. Get ready for the next race!`
-          : 'Welcome to LetterBoxBox!'}
+          : 'Welcome to BoxBoxd!'}
       </Typography>
 
       {/* Friends/Following Reviews */}

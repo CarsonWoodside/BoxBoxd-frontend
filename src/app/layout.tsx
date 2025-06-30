@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { AppBar, Toolbar, Typography, Box } from '@mui/material';
 
 export const metadata: Metadata = {
-  title: "F1 Letterboxd",
+  title: "BoxBoxd",
   description: "Log, rate, and review F1 races.",
 };
 
