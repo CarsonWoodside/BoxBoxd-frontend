@@ -1,8 +1,20 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Box, Typography, TextField, Avatar, List, ListItem, ListItemAvatar, ListItemText, CircularProgress, Paper } from '@mui/material';
+import {
+  Box,
+  Typography,
+  TextField,
+  Avatar,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  CircularProgress,
+  Paper,
+} from '@mui/material';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 
@@ -15,7 +27,7 @@ interface User {
   favoriteTeam?: string;
 }
 
-export default function UserSearchPage() {
+function InnerUserSearchPage() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('query') || '';
   const [query, setQuery] = useState(initialQuery);
@@ -96,5 +108,13 @@ export default function UserSearchPage() {
         )}
       </Paper>
     </Box>
+  );
+}
+
+export default function UsersPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InnerUserSearchPage />
+    </Suspense>
   );
 }
