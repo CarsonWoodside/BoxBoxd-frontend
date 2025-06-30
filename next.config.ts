@@ -11,6 +11,9 @@ const nextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  images: {
+    domains: ['flagcdn.com'],
+  },
 };
 
 export default nextConfig;

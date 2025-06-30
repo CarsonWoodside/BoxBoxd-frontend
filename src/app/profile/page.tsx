@@ -96,6 +96,13 @@ const ProfilePage = () => {
   const { user } = useAuth();
   const router = useRouter();
 
+  // --- REDIRECT LOGIC: send to /auth if not logged in ---
+  useEffect(() => {
+    if (!user) {
+      router.push('/auth');
+    }
+  }, [user, router]);
+
   const [reviews, setReviews] = useState<UserReview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -162,7 +169,6 @@ const ProfilePage = () => {
     }
 
     if (reviews.length === 0) {
-      router.push('/races');
       return <EmptyState message="No reviews yet. Go review your first race!" title={''} />;
     }
 
@@ -204,6 +210,11 @@ const ProfilePage = () => {
       </Grid>
     );
   };
+
+  // --- Prevent rendering while redirecting ---
+  if (!user) {
+    return null;
+  }
 
   return (
     <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 2 }}>
