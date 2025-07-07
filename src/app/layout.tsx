@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { AuthProvider } from "@/context/AuthContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { SettingsProvider } from "@/context/SettingsContext";
 import Header from "@/components/Header";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import ThemeRegistry from "@/components/ThemeRegistry";
@@ -30,25 +31,27 @@ export default function RootLayout({
       >
         <AuthProvider>
           <NotificationProvider>
-            <ThemeRegistry>
-              {/* Desktop Header */}
-              <Header />
-              {/* Mobile Top Bar */}
-              <AppBar position="static" sx={{ display: { xs: 'block', md: 'none' }, borderRadius: 0 }}>
-                <Toolbar sx={{ justifyContent: 'center', minHeight: 48 }}>
-                  <Typography variant="h6" sx={{ color: 'inherit', textAlign: 'center', flex: 1 }}>
-                    BoxBoxd
-                  </Typography>
-                </Toolbar>
-              </AppBar>
-              <main style={{ flex: 1 }}>{children}</main>
-              {/* Hide footer on mobile */}
-              <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-                <Footer />
-              </Box>
-              {/* Mobile Bottom Navigation */}
-              <MobileBottomNav />
-            </ThemeRegistry>
+            <SettingsProvider>
+              <ThemeRegistry>
+                {/* Desktop Header */}
+                <Header />
+                {/* Mobile Top Bar */}
+                <AppBar position="static" sx={{ display: { xs: 'block', md: 'none' }, borderRadius: 0 }}>
+                  <Toolbar sx={{ justifyContent: 'center', minHeight: 48 }}>
+                    <Typography variant="h6" sx={{ color: 'inherit', textAlign: 'center', flex: 1 }}>
+                      BoxBoxd
+                    </Typography>
+                  </Toolbar>
+                </AppBar>
+                <main style={{ flex: 1 }}>{children}</main>
+                {/* Hide footer on mobile */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+                  <Footer />
+                </Box>
+                {/* Mobile Bottom Navigation */}
+                <MobileBottomNav />
+              </ThemeRegistry>
+            </SettingsProvider>
           </NotificationProvider>
         </AuthProvider>
       </body>

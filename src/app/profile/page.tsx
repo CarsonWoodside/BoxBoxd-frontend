@@ -5,9 +5,11 @@ import axios from 'axios';
 import { useAuth } from '@/context/AuthContext';
 import CardSkeleton from '@/components/CardSkeleton';
 import EmptyState from '@/components/EmptyState';
-import { Box, Typography, Alert, Grid, Card, Rating, Avatar } from '@mui/material';
+import TeamSelector from '@/components/TeamSelector';
+import { Box, Typography, Alert, Grid, Card, Rating, Avatar, IconButton } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 // --- Race name to flag code mapping (case-insensitive) ---
 const raceToFlag: Record<string, string> = {
@@ -217,14 +219,26 @@ const ProfilePage = () => {
   }
 
   return (
-    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 2 }}>
+    <Box sx={{ maxWidth: 800, mx: 'auto', mt: 4, p: 2, position: 'relative' }}>
+      {/* Settings cog icon in top-right */}
+      <IconButton
+        aria-label="Settings"
+        sx={{ position: 'absolute', top: 16, right: 16 }}
+        onClick={() => router.push('/settings')}
+      >
+        <SettingsIcon />
+      </IconButton>
       {user && renderAvatar(user, 64)}
       <Typography variant="h5" mb={1}>
         {user?.username}&apos;s Profile
       </Typography>
-      <Typography variant="body2" mb={3}>
+      <Typography variant="body2" mb={2}>
         Your personal F1 diary.
       </Typography>
+      {/* --- Favourite Team Selector --- */}
+      <Box mb={3}>
+        <TeamSelector />
+      </Box>
       <Typography variant="subtitle1" mb={1}>
         Watched Races ({reviews.length})
       </Typography>

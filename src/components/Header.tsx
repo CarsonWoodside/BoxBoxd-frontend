@@ -1,11 +1,27 @@
 'use client';
 
-import { AppBar, Toolbar, Typography, Button, Box, InputBase, Paper, List, ListItem, ListItemAvatar, Avatar, ListItemText, Popper, ClickAwayListener } from '@mui/material';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  InputBase,
+  Paper,
+  List,
+  ListItem,
+  ListItemAvatar,
+  Avatar,
+  ListItemText,
+  Popper,
+  ClickAwayListener
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
+import { useTheme } from '@mui/material/styles';
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || '';
@@ -20,6 +36,7 @@ interface User {
 export default function Header() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const theme = useTheme();
 
   // --- Search State ---
   const [search, setSearch] = useState('');
@@ -38,7 +55,9 @@ export default function Header() {
     setLoading(true);
     const timeout = setTimeout(async () => {
       try {
-        const res = await axios.get(`${API_URL}/api/users/search?query=${encodeURIComponent(search)}`);
+        const res = await axios.get(
+          `${API_URL}/api/users/search?query=${encodeURIComponent(search)}`
+        );
         setResults(res.data.slice(0, 5)); // Show top 5
         setOpen(res.data.length > 0);
       } finally {
@@ -69,14 +88,40 @@ export default function Header() {
     }
   };
 
+  // Border color: main background in dark mode, transparent in light mode
+  const borderColor =
+    theme.palette.mode === 'dark'
+      ? theme.palette.background.default
+      : 'transparent';
+
+  // Use theme's contrast text for input and placeholder
+  const inputColor = theme.palette.getContrastText(
+    theme.palette.background.paper
+  );
+
   return (
-    <AppBar position="static" sx={{ mb: 4, display: { xs: 'none', md: 'block' } }}>
+    <AppBar
+      position="static"
+      color="primary"
+      sx={{
+        mb: 4,
+        display: { xs: 'none', md: 'block' },
+        bgcolor:
+          theme.palette.mode === 'dark'
+            ? theme.palette.primary.main
+            : undefined,
+        color:
+          theme.palette.mode === 'dark'
+            ? theme.palette.primary.contrastText
+            : undefined,
+      }}
+    >
       <Toolbar>
         {/* Site Title */}
-        <Typography 
-          variant="h6" 
-          component={Link} 
-          href="/" 
+        <Typography
+          variant="h6"
+          component={Link}
+          href="/"
           sx={{ flexGrow: 1, color: 'inherit', textDecoration: 'none' }}
         >
           BoxBoxd
@@ -86,17 +131,37 @@ export default function Header() {
         <Box ref={anchorRef} sx={{ position: 'relative', mr: 2, width: 240 }}>
           <Paper
             component="form"
-            sx={{ display: 'flex', alignItems: 'center', width: '100%', pl: 1, pr: 1, py: 0.5, boxShadow: 0, bgcolor: 'rgba(255,255,255,0.1)' }}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              width: '100%',
+              pl: 1,
+              pr: 1,
+              py: 0.5,
+              boxShadow: 0,
+              bgcolor: 'rgba(255,255,255,0.1)',
+              border: `1.5px solid ${borderColor}`,
+              transition: 'border-color 0.2s',
+            }}
             onSubmit={handleSubmit}
           >
-            <SearchIcon sx={{ color: 'inherit', mr: 1 }} />
+            <SearchIcon sx={{ color: inputColor, mr: 1 }} />
             <InputBase
               placeholder="Search users…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              onFocus={() => { if (results.length > 0) setOpen(true); }}
+              onFocus={() => {
+                if (results.length > 0) setOpen(true);
+              }}
               onKeyDown={handleKeyDown}
-              sx={{ color: 'inherit', flex: 1 }}
+              sx={{
+                color: inputColor,
+                flex: 1,
+                '::placeholder': {
+                  color: inputColor,
+                  opacity: 0.7,
+                },
+              }}
               inputProps={{ 'aria-label': 'search users' }}
             />
           </Paper>
@@ -117,21 +182,27 @@ export default function Header() {
                       key={u._id}
                       component={Link}
                       href={`/users/${u._id}`}
-                      onClick={() => { setOpen(false); setSearch(''); }}
+                      onClick={() => {
+                        setOpen(false);
+                        setSearch('');
+                      }}
                       sx={{
                         cursor: 'pointer',
                         textDecoration: 'none',
                         color: 'inherit',
-                        '&:hover': { backgroundColor: 'action.hover' }
+                        '&:hover': { backgroundColor: 'action.hover' },
                       }}
                     >
                       <ListItemAvatar>
-                        <Avatar src={u.avatar && u.avatar !== 'default-avatar-url'
-                          ? u.avatar.startsWith('http')
-                            ? u.avatar
-                            : `${API_URL}${u.avatar}`
-                          : undefined
-                        }>
+                        <Avatar
+                          src={
+                            u.avatar && u.avatar !== 'default-avatar-url'
+                              ? u.avatar.startsWith('http')
+                                ? u.avatar
+                                : `${API_URL}${u.avatar}`
+                              : undefined
+                          }
+                        >
                           {!u.avatar || u.avatar === 'default-avatar-url'
                             ? u.username.charAt(0).toUpperCase()
                             : null}
@@ -139,7 +210,11 @@ export default function Header() {
                       </ListItemAvatar>
                       <ListItemText
                         primary={u.username}
-                        secondary={u.favoriteTeam ? `Favorite Team: ${u.favoriteTeam}` : undefined}
+                        secondary={
+                          u.favoriteTeam
+                            ? `Favorite Team: ${u.favoriteTeam}`
+                            : undefined
+                        }
                       />
                     </ListItem>
                   ))}

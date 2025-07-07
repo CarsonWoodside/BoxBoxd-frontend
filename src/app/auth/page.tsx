@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Box, Button, TextField, Typography, Alert } from '@mui/material';
+import { useRouter } from 'next/navigation'; // <-- Import useRouter
 
 // Define proper error type
 interface ErrorWithResponse {
@@ -34,7 +35,15 @@ export default function AuthPage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const { login, register } = useAuth();
+  const { login, register, user } = useAuth(); // <-- Get user from context
+  const router = useRouter(); // <-- Initialize router
+
+  // --- Redirect if already logged in ---
+  useEffect(() => {
+    if (user) {
+      router.replace('/'); // Redirect to home if logged in
+    }
+  }, [user, router]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -87,6 +96,9 @@ export default function AuthPage() {
     setIsLoginView(!isLoginView);
     setError(null);
   };
+
+  // Prevent rendering the form if already logged in (optional, for UX)
+  if (user) return null;
 
   return (
     <Box

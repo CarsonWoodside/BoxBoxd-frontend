@@ -1,13 +1,16 @@
 // src/components/ThemeRegistry.tsx
 'use client';
 
-import * as React from 'react';
-import { ThemeProvider } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { useAuth } from '@/context/AuthContext';
+import { useSettings } from '@/context/SettingsContext';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import themes from '@/theme';
 
-export default function ThemeRegistry({ children }: { children: React.ReactNode }) {
-  const { theme } = useAuth(); // Get the active theme from our context
+const ThemeRegistry = ({ children }: { children: React.ReactNode }) => {
+  const { user } = useAuth();
+  const { mode } = useSettings(); // 'light' or 'dark'
+  const teamKey = user?.favoriteTeam || 'default';
+  const theme = themes[teamKey]?.[mode] || themes['default'][mode];
 
   return (
     <ThemeProvider theme={theme}>
@@ -15,4 +18,6 @@ export default function ThemeRegistry({ children }: { children: React.ReactNode 
       {children}
     </ThemeProvider>
   );
-}
+};
+
+export default ThemeRegistry;
